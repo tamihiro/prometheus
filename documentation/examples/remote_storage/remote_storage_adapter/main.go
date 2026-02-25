@@ -218,6 +218,7 @@ func serve(logger *slog.Logger, addr string, writers []writer, readers []reader)
 		for _, w := range writers {
 			wg.Add(1)
 			go func(rw writer) {
+				logger.Info("sending samples to writer", "writer", writer.Name(rw), "sample count", samples.Len())
 				sendSamples(logger, rw, samples)
 				wg.Done()
 			}(w)
@@ -301,7 +302,9 @@ func protoToSamples(req *prompb.WriteRequest) model.Samples {
 
 func sendSamples(logger *slog.Logger, w writer, samples model.Samples) {
 	begin := time.Now()
+	logger.Info("doing writer.Write() from sendSamples()", "writer", w.Name())
 	err := w.Write(samples)
+	logger.Info("writer.Write() done from sendSamples()", "writer", w.Name())
 	duration := time.Since(begin).Seconds()
 	if err != nil {
 		logger.Warn("Error sending samples to remote storage", "err", err, "storage", w.Name(), "num_samples", len(samples))
@@ -309,4 +312,5 @@ func sendSamples(logger *slog.Logger, w writer, samples model.Samples) {
 	}
 	sentSamples.WithLabelValues(w.Name()).Add(float64(len(samples)))
 	sentBatchDuration.WithLabelValues(w.Name()).Observe(duration)
+	logger.Info("samples sent to remote storage", "storage", w.Name())
 }

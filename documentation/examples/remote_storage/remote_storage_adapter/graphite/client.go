@@ -85,6 +85,7 @@ func (c *Client) Write(samples model.Samples) error {
 	if err != nil {
 		return err
 	}
+	c.logger.Info("client connected to graphite", "transport", c.transport, "address", c.address)
 	defer conn.Close()
 
 	var buf bytes.Buffer
@@ -98,6 +99,7 @@ func (c *Client) Write(samples model.Samples) error {
 		}
 		fmt.Fprintf(&buf, "%s %f %f\n", k, v, t)
 	}
+	c.logger.Info("client sending samples to graphite", "data", buf.String())
 
 	_, err = conn.Write(buf.Bytes())
 	return err
