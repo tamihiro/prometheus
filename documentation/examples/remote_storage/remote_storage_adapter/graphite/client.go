@@ -98,6 +98,7 @@ func (c *Client) Write(samples model.Samples) error {
 		}
 		fmt.Fprintf(&buf, "%s %f %f\n", k, v, t)
 	}
+	c.logger.Info("client sending samples to graphite", "data", buf.String())
 
 	_, err = conn.Write(buf.Bytes())
 	return err
